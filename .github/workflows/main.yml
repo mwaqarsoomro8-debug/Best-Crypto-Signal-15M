@@ -46,9 +46,4 @@ jobs:
           echo "Found ZIP: $ZIP_FILE"
           unzip -o "$ZIP_FILE" -d extracted
           find extracted -name settings.gradle -o -name settings.gradle.kts
-          - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Best-Crypto-Signal-15M-APK
-          path: '**/build/outputs/apk/debug/*.apk'
-          if-no-files-found:
+          
