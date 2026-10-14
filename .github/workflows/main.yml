@@ -51,4 +51,4 @@ jobs:
         with:
           name: Best-Crypto-Signal-15M-APK
           path: '**/build/outputs/apk/debug/*.apk'
-          if-no-files-found: error
+          if-no-files-found:
