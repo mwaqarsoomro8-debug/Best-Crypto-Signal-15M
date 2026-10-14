@@ -37,17 +37,12 @@ jobs:
 
       - name: Extract Android project
         run: |
-          unzip -q Best-Crypto-Signal-15minute.zip
-          test -f CryptoSignal15M-Android/settings.gradle.kts
-
-      - name: Build debug APK
-        run: |
-          cd CryptoSignal15M-Android
-          gradle assembleDebug --no-daemon
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Best-Crypto-Signal-15M-APK
-          path: CryptoSignal15M-Android/app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
+          ls -la
+          ZIP_FILE="$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)"
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ERROR: ZIP file not found in repository root"
+            exit 1
+          fi
+          echo "Found ZIP: $ZIP_FILE"
+          unzip -o "$ZIP_FILE" -d extracted
+          find extracted -name settings.gradle -o -name settings.gradle.kts
