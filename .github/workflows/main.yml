@@ -23,7 +23,7 @@ jobs:
       - name: Extract source code zip
         run: |
           unzip -o Best-Crypto-Signal-15minute.zip -d extracted_content
-          # اگر زپ کے اندر ایک اور مین فولڈر ہے تو اس کی فائلیں باہر لائیں
+          
           if [ -d "extracted_content/Best-Crypto-Signal-15minute" ]; then
             mv extracted_content/Best-Crypto-Signal-15minute/* . || true
             mv extracted_content/Best-Crypto-Signal-15minute/.* . || true
