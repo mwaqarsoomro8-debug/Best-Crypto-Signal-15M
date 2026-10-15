@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      
+    
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -23,7 +23,6 @@ jobs:
       - name: Extract source code zip
         run: |
           unzip -o Best-Crypto-Signal-15minute.zip -d project_folder
-          # اگر پروجیکٹ روٹ فولڈر میں ہی ہے تو فائلز کو باہر نکالیں
           mv project_folder/* . || true
 
       
@@ -34,8 +33,9 @@ jobs:
           java-version: '17'
 
       
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Accept Android SDK licenses
+        run: |
+          yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses
 
       
       - name: Set up Gradle
