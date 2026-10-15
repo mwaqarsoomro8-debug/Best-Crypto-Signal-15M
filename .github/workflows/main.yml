@@ -24,10 +24,12 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Accept Android SDK licenses
-        run: |
-          yes | sdkmanager --licenses
 
+         - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+       
+
+o
       
       
           SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
