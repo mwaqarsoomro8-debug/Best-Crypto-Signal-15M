@@ -15,9 +15,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      
+      - name: Extract source code zip
+        run: |
+          unzip -o Best-Crypto-Signal-15minute.zip -d project_folder
+          # اگر پروجیکٹ روٹ فولڈر میں ہی ہے تو فائلز کو باہر نکالیں
+          mv project_folder/* . || true
+
+      
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -32,32 +41,17 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build APK
+      
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      
+      - name: Build Android Release APK
         run: ./gradlew assembleRelease
 
-
-
-      - name: Extract Android project
-        shell: bash
-        run: |
-          mkdir -p extracted
-          unzip -o Best-Crypto-Signal-15minute.zip -d extracted
-          PROJECT_DIR="$(dirname "$(find "$GITHUB_WORKSPACE/extracted" -name settings.gradle.kts -print -quit)")"
-          if [ -z "$PROJECT_DIR" ] || [ ! -f "$PROJECT_DIR/app/build.gradle.kts" ]; then
-            echo "Android project files were not found."
-            exit 1
-          fi
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-
-      - name: Build APK
-        run: |
-          cd "$PROJECT_DIR"
-          gradle assembleDebug --no-daemon
-
-      - name: Upload APK
+      
+      - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: Best-Crypto-Signal-15M-APK
-          path: extracted/**/app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
-          retention-days: 7
+          name: app-release-apk
+          path: app/build/outputs/apk/release/*.apk
