@@ -46,15 +46,23 @@ jobs:
         with:
           gradle-version: wrapper
 
-      
-      - name: Make gradlew executable
-        run: chmod +x gradlew
+      - name: Locate Android project
+        shell: bash
+        run: |
+          PROJECT_DIR="$(dirname "$(find "$GITHUB_WORKSPACE" -name settings.gradle.kts -print -quit)")"
+          if [ -z "$PROJECT_DIR" ] || [ ! -f "$PROJECT_DIR/app/build.gradle.kts" ]; then
+            echo "Android project files not found"
+            exit 1
+          fi
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
       
       - name: Build Android Release APK
-        run: ./gradlew assembleRelease
+        shell: bash
+        run: |
+          gradle -p "$PROJECT_DIR" assembleDebug --no-daemon
 
-      
+
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
