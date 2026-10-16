@@ -57,6 +57,15 @@ jobs:
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
       
+      - name: Align Java and Kotlin targets
+        shell: bash
+        run: |
+          FILE="$PROJECT_DIR/app/build.gradle.kts"
+          sed -i 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' "$FILE"
+          sed -i 's/jvmTarget = "1.8"/jvmTarget = "17"/g' "$FILE"
+          echo "Updated Java/Kotlin targets:"
+          grep -nE 'sourceCompatibility|targetCompatibility|jvmTarget' "$FILE" || true
+
       - name: Build Android Release APK
         shell: bash
         run: |
