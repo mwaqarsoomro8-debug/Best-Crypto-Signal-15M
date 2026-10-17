@@ -27,11 +27,11 @@ jobs:
           distribution: temurin
           java-version: '17'
           
-      - name: Accept licenses and install SDK
+       - name: Accept licenses and install SDK
         run: |
           set -e
           yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"   
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"  
 
       - name: Install Android SDK packages
         shell: bash
