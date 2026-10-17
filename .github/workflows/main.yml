@@ -3,8 +3,9 @@ name: Build Android APK
 on:
   workflow_dispatch:
   push:
+    branches: [ main ]
     paths:
-      - '**.zip'
+      - '**/*.zip'
       - '.github/workflows/main.yml'
 
 permissions:
@@ -14,6 +15,7 @@ jobs:
   build:
     name: Build Android App
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -25,14 +27,16 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept licenses and install SDK
+      - name: Install Android SDK packages
+        shell: bash
+        env:
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
         run: |
           set -e
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"
+          ls -la "${ANDROID_SDK_ROOT}" || true
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "cmdline-tools;latest" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Extract ZIP project
         shell: bash
@@ -83,12 +87,17 @@ jobs:
           set -e
           mkdir -p dist
 
-          find "$PROJECT_DIR" -type f -path '/build/outputs/apk//*.apk' -exec cp {} dist/ \;
+          MAPFILE=$(find "$PROJECT_DIR" -type f \( -path '*/build/outputs/apk/*/*.apk' -o -path '*/build/outputs/apk/*.apk' \) -print)
 
-          if ! ls dist/*.apk >/dev/null 2>&1; then
+          if [ -z "$MAPFILE" ]; then
             echo "ERROR: Build finished but no APK was found"
+            find "$PROJECT_DIR" -type f | grep -E '/build/outputs/|\.apk$' | head -50 || true
             exit 1
           fi
+
+          echo "$MAPFILE" | while IFS= read -r apk; do
+            cp "$apk" dist/
+          done
 
           ls -lh dist/
 
