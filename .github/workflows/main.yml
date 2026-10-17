@@ -29,6 +29,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+          
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Accept Android SDK licenses
         shell: bash
@@ -51,23 +57,17 @@ jobs:
           "$SDKMANAGER" --sdk_root="$SDK_ROOT" \
             "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Extract Android project
-        shell: bash
+       - name: Extract Android project
         run: |
+          set -e
           mkdir -p extracted
-          unzip -o Best-Crypto-Signal-15minute.zip -d extracted
-
-          PROJECT_DIR="$(dirname "$(find "$GITHUB_WORKSPACE/extracted" \
-            -name settings.gradle.kts -print -quit)")"
-
-          if [ -z "$PROJECT_DIR" ] || \
-             [ ! -f "$PROJECT_DIR/app/build.gradle.kts" ]; then
-            echo "Android project or app/build.gradle.kts not found"
+          ZIP_FILE="$(find . -maxdepth 1 -type f -iname '*.zip' -print -quit)"
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ERROR: No ZIP file found in repository root"
             exit 1
           fi
-
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-          echo "Android project found: $PROJECT_DIR"
+          echo "Found ZIP: $ZIP_FILE"
+          unzip -o "$ZIP_FILE" -d extracted
 
       - name: Align Java and Kotlin targets
         shell: bash
@@ -106,15 +106,15 @@ jobs:
                   print("Updated:", path)
           PY
 
-      - name: Build Android Debug APK
-        shell: bash
+        - name: Build debug APK
         run: |
-          gradle -p "$PROJECT_DIR" assembleDebug --no-daemon
+          cd "$PROJECT_DIR"
+          ./gradlew assembleDebug --stacktrace
 
-      - name: Upload Android APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Best-Crypto-Signal-15M-APK
-          path: extracted/**/app/build/outputs/apk/debug/*.apk
+          name: android-apk
+          path: extracted/*/build/outputs/apk/debug/.apk
           if-no-files-found: error
           retention-days: 7
