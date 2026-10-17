@@ -1,11 +1,10 @@
-
 name: Build Android APK
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - 'Best-Crypto-Signal-15minute.zip'
+      - '*.zip'
       - '.github/workflows/main.yml'
 
 permissions:
@@ -25,11 +24,6 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
-          
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
@@ -48,44 +42,21 @@ jobs:
           echo "Found ZIP: $ZIP_FILE"
           unzip -o "$ZIP_FILE" -d extracted
 
-      - name: Align Java and Kotlin targets
-        shell: bash
+      - name: Find Android project
         run: |
-          python3 - <<'PY'
-          import os
-          import re
-          from pathlib import Path
+          set -e
+          GRADLEW="$(find extracted -type f -name gradlew -print -quit)"
+          if [ -z "$GRADLEW" ]; then
+            echo "ERROR: gradlew not found in ZIP"
+            find extracted -maxdepth 4 -type f | head -100
+            exit 1
+          fi
+          PROJECT_DIR="$(dirname "$GRADLEW")"
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          chmod +x "$GRADLEW"
+          echo "Found Android project: $PROJECT_DIR"
 
-          root = Path(os.environ["PROJECT_DIR"])
-          files = list(root.rglob("*.gradle.kts"))
-          files += list(root.rglob("*.gradle"))
-
-          for path in files:
-              text = path.read_text()
-              original = text
-
-              text = text.replace(
-                  "JavaVersion.VERSION_1_8",
-                  "JavaVersion.VERSION_17"
-              )
-              text = re.sub(
-                  r'(?i)(jvmTarget\s*=\s*["\'])1\.8(["\'])',
-                  r'\g<1>17\2',
-                  text
-              )
-              text = re.sub(
-                  r'(?i)(sourceCompatibility|targetCompatibility)'
-                  r'(\s*=\s*)["\']1\.8["\']',
-                  r'\1\2JavaVersion.VERSION_17',
-                  text
-              )
-
-              if text != original:
-                  path.write_text(text)
-                  print("Updated:", path)
-          PY
-
-        - name: Build debug APK
+      - name: Build debug APK
         run: |
           cd "$PROJECT_DIR"
           ./gradlew assembleDebug --stacktrace
